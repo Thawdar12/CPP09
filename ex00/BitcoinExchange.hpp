@@ -2,7 +2,7 @@
 
 #include <string>
 #include <map>
-#include <exception>
+// #include <exception>
 
 class BitcoinExchange
 {
@@ -22,17 +22,5 @@ class BitcoinExchange
 
         void processInputFile(const std::string& filename);
 
-        class Exception : public std::exception
-        {
-            private:
-                const std::string msg;
-            public:
-                Exception(const std::string& message) : msg(message) {}
-                ~Exception() throw();
-
-                const char* what() const throw()
-                {
-                    return msg.c_str();
-                }
-        };
 };
+

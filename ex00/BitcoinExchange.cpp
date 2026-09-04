@@ -4,12 +4,13 @@
 #include <fstream>
 #include <cstdlib>
 #include <sstream>
+#include <stdexcept>
 
 void BitcoinExchange::loadDatabase(const std::string& filename)
 {
     std::ifstream infile(filename.c_str());
     if(!infile)
-        throw Exception("Error: could not open file.");
+        throw std::runtime_error("Error: could not open file.");
 
     std::string line;
     std::string date;
@@ -119,13 +120,12 @@ bool BitcoinExchange::validateValue(const double value)
     return true;
 }
 
-BitcoinExchange::Exception::~Exception() throw() {}
 
 void BitcoinExchange::processInputFile(const std::string& filename)
 {
     std::ifstream infile(filename.c_str());
     if (!infile)
-        throw Exception("Error: could not open file.");
+        throw std::runtime_error("Error: could not open file.");
 
     std::string line;
     std::getline(infile, line);
@@ -195,3 +195,4 @@ void BitcoinExchange::processInputFile(const std::string& filename)
                   << " = " << result << std::endl;
     }
 }
+

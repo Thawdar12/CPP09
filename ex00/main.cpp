@@ -14,7 +14,7 @@ int main(int argc, char **argv)
         BitcoinExchange btc("data.csv");
         btc.processInputFile(argv[1]);
     }
-    catch (const BitcoinExchange::Exception& e)
+    catch (const std::runtime_error& e)
     {
         std::cout << e.what() << std::endl;
         return 1;
