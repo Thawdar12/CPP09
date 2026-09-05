@@ -6,13 +6,18 @@
 class RPN
 {
     private:
-        std::stack<int> _numbers;
+        std::string _input;
+
+        bool validNumber(const std::string& input);
+        bool validOperator(const std::string& input);
 
     public:
         RPN();
-        RPN(std::string& input);
+        RPN(std::string input);
         RPN(const RPN& other);
         RPN& operator=(const RPN& other);
         ~RPN();
 
+        int calculate();
 };
+
