@@ -22,6 +22,9 @@ stack must contain exactly 1 result
 #include <sstream>
 #include <stack>
 #include <string>
+#include <stdlib.h>
+#include <iostream>
+#include <cctype>
 // std::stack<int> _numbers;
 
 RPN::RPN() : _input() {}
@@ -44,12 +47,17 @@ int RPN::calculate()
     std::stack<int> numbers;
     std::istringstream iss(_input);
     std::string str;
-    
+    if (!vaildFormat(_input))
+        throw std::runtime_error("Error: invalid format");
     while (iss >> str)
     {
+        std::cout << "iss: " << str << "\n" << std::endl;
         if (validNumber(str))
         {
-            int num = std::stoi(str);
+            std::cout << "enter" << std::endl;
+            const char* tmp = str.c_str();
+            int num = std::atoi(tmp);
+            std::cout << "num and tmp: "<< num << " " << tmp << std::endl;
             numbers.push(num);
         }
         else
@@ -57,7 +65,7 @@ int RPN::calculate()
             if(validOperator(str))
             {
                 if (numbers.size() < 2)
-                throw std::runtime_error("Error\n");
+                    throw std::runtime_error("Error: size less than 2");
                 char op = str[0];
                 int right = numbers.top();
                 numbers.pop();
@@ -95,21 +103,85 @@ int RPN::calculate()
                 numbers.push(result);
             }
             else
-                throw std::runtime_error("Error\n");
+                throw std::runtime_error("Error: invalid expression");
         }
     }
     if (numbers.size() != 1)
-        throw std::runtime_error("Error\n");
+        throw std::runtime_error("Error: not enough operators");
     return numbers.top();
 }
 
 bool RPN::validNumber(const std::string& input) 
 {
+    // int num = std::stoi(input);
 
+    if (input.empty())
+        return false;
+    for (std::string::size_type i = 0; i < input.size(); i++)
+    {
+        if (!std::isdigit(input[i]))
+        {
+            std::cout << "num: " << input[i] <<"\n" << std::endl;
+            return false;
+        }
+    }
+    return true;
 }
 
 bool RPN::validOperator(const std::string& input) 
 {
+    if (input.empty())
+        return false;
+    if (input == "+" || input == "-" || input == "/" || input == "*")
+    {
+        std::cout << "op: " << input << "\n" << std::endl;
+        return true;
+    }
+    return false;
+}
 
+bool RPN::vaildFormat(const std::string& input)
+{
+    if (input.empty())
+        return false;
+
+    std::string::size_type i = 0;
+
+    // Skip leading spaces
+    while (i < input.size() && input[i] == ' ')
+        i++;
+
+    // Only spaces
+    if (i == input.size())
+        return false;
+
+    while (i < input.size())
+    {
+        // Token: exactly one character
+        if (input[i] == ' ')
+            return false;
+
+        i++;
+
+        // End of expression
+        if (i == input.size())
+            return true;
+
+        // Exactly one space required
+        if (input[i] != ' ')
+            return false;
+
+        i++;
+
+        // Trailing spaces are allowed
+        if (i == input.size())
+            return true;
+
+        // Second consecutive space
+        if (input[i] == ' ')
+            return false;
+    }
+
+    return true;
 }
 
