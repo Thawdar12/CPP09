@@ -10,6 +10,7 @@ class RPN
 
         bool validNumber(const std::string& input);
         bool validOperator(const std::string& input);
+        bool vaildFormat(const std::string& input);
 
     public:
         RPN();
