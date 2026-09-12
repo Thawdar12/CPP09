@@ -21,4 +21,3 @@ class RPN
 
         int calculate();
 };
-

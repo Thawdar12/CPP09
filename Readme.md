@@ -995,17 +995,21 @@ Think:
 ```text
 input
  ↓
-pairs
+make pairs
  ↓
-small + large
+sort each pair: small < large
  ↓
-recursively sort large
+extract large elements
  ↓
-main chain
+recursively Ford-Johnson-sort the large elements
  ↓
-Jacobsthal insertion order
+reconnect small ↔ corresponding large
  ↓
-binary insertion
+insert small elements using Jacobsthal order
+ ↓
+bounded lower_bound before corresponding large
+ ↓
+insert odd leftover
  ↓
 sorted result
 ```
@@ -1020,32 +1024,123 @@ Main algorithm idea:
 
 ---
 
-# Final Takeaway
-
-CPP09 is less about memorizing STL functions and more about understanding:
-
-1. **Which container fits the problem**
-2. **How the container's behavior affects the algorithm**
-3. **How to parse and validate real input**
-4. **How recursion can reduce a problem**
-5. **How binary search reduces comparisons**
-6. **How algorithmic choices affect performance**
-
-The most important exercise conceptually is **ex02**, because it combines:
-
 ```text
-STL
-+
-recursion
-+
-pairing
-+
-binary search
-+
-Jacobsthal sequence
-+
-algorithm design
-+
-performance measurement
-```
+ORIGINAL
+11 4 9 2 8 1 7 3 10 6 5
+        │
+        │ make pairs
+        ▼
+(4,11) (2,9) (1,8) (3,7) (6,10)
+        │
+        │ take large
+        ▼
+     11 9 8 7 10
+        │
+        │ RECURSION
+        ▼
+    (9,11) (7,8) + 10
+        │
+        │ take large
+        ▼
+       11 8
+        │
+        │ RECURSION
+        ▼
+       (8,11)
+        │
+        │ take large
+        ▼
+        11
+        │
+        │ only 1 number
+        ▼
+       STOP
 
+    Then fall back:
+        11
+        │
+        │ insert 8
+        ▼
+        8 11
+        │
+        │ insert 7 and 9
+        ▼
+        7 8 9 11
+        │
+        │ insert leftover 10
+        ▼
+        7 8 9 10 11
+    
+    Now Jacob algo
+    We know:
+    3 < 7  b1
+    1 < 8  b2
+    2 < 9  b3
+    6 < 10 b4
+    4 < 11 b5
+    
+    Sorted large chain:
+    7 8 9 10 11
+        │
+        │ first small => 3
+        ▼
+    3 7 8 9 10 11
+
+    Jacobsthal:
+    1, 3, 5, 11, ...
+
+    Groups:
+    [b1]
+    [b2 b3]
+    [b4 b5]
+
+    Insert backwards:
+    b1
+    b3 b2
+    b5 b4
+
+    We already inserted 1st:
+        │
+        ▼
+    Insert b3 = 2
+    2 < 9
+    Search before 9
+        │
+        ▼
+    2 3 7 8 | 9 10 11
+
+        │
+        ▼
+    Insert b2 = 1
+    1 < 8
+    Search before 8
+        │
+        ▼
+    1 2 3 7 | 8 9 10 11
+
+        │
+        ▼
+    Insert b5 = 4
+    4 < 11
+    Search before 11
+        │
+        ▼
+    1 2 3 4 7 8 9 10 | 11
+
+        │
+        ▼
+    Insert b4 = 6
+    6 < 10
+    Search before 10
+        │
+        ▼
+    1 2 3 4 6 7 8 9 | 10 11
+
+        │
+        ▼
+    Leftover = 5
+    Search entire chain
+        │
+        ▼
+    1 2 3 4 5 6 7 8 9 10 11
+```

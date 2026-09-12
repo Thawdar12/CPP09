@@ -10,10 +10,11 @@ int main(int argc, char **argv)
     {
         PmergeMe sorting;
 
-        clock_t startVector = clock();
-
         sorting.parseInput(argc, argv);
         sorting.printBefore(argc, argv);
+
+        clock_t startVector = clock();
+        
         sorting.sortVector();
 
         clock_t endVector = clock();

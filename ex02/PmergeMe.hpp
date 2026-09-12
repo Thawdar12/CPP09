@@ -12,12 +12,12 @@ class PmergeMe
         
         std::deque<int> fordJohnsonDeque(const std::deque<int>& containerDeque);
 
-        void insertPendingVector(std::vector<int>& mainChain,
+        void jacobVector(std::vector<int>& mainChain,
                             std::vector< std::pair<int, int> >& pairs,
                             bool hasLast,
                             int lastNum);
 
-        void insertPendingDeque(
+        void jacobDeque(
             std::deque<int>& mainChain,
             std::deque< std::pair<int, int> >& pairs,
             bool hasLast,

@@ -5,37 +5,8 @@
 #include <cstdlib>
 #include <sstream>
 #include <stdexcept>
-
-void BitcoinExchange::loadDatabase(const std::string& filename)
-{
-    std::ifstream infile(filename.c_str());
-    if(!infile)
-        throw std::runtime_error("Error: could not open file.");
-
-    std::string line;
-    std::string date;
-    std::string rate;
-    double changedRate;
-    std::getline(infile,line);
-
-    while(std::getline(infile, line))
-    {
-        std::string::size_type pos = 0;
-        if((pos = line.find(",", pos)) != std::string::npos)
-        {
-            date = line.substr(0, pos);
-            rate = line.substr(pos + 1);
-            changedRate = std::atof(rate.c_str());
-            _database.insert(std::make_pair(date, changedRate));
-        }
-    }
-    
-    // testing
-    // for(std::map<std::string, double>::iterator it = _database.begin(); it != _database.end(); it++)
-    // {
-    //     std::cout << it->first << " => " << std::fixed << std::setprecision(2) << it->second << '\n';
-    // }
-}
+#include <utility>
+#include <cctype>
 
 BitcoinExchange::BitcoinExchange() : _database() {}
 
@@ -56,6 +27,35 @@ BitcoinExchange& BitcoinExchange::operator=(const BitcoinExchange& other)
 
 BitcoinExchange::~BitcoinExchange() {}
 
+
+void BitcoinExchange::loadDatabase(const std::string& filename)
+{
+    std::ifstream infile(filename.c_str());
+    if(!infile)
+        throw std::runtime_error("Error: could not open file.");
+
+    std::string line;
+    std::string date;
+    std::string rate;
+    double changedRate;
+    std::getline(infile,line);
+
+    while(std::getline(infile, line))
+    {
+        std::string::size_type pos = 0;
+        if((pos = line.find(",", pos)) != std::string::npos)
+        {
+            date = line.substr(0, pos);
+            rate = line.substr(pos + 1);
+            // changedRate = std::atof(rate.c_str());
+            std::istringstream rateStream(rate);
+            if (!(rateStream >> changedRate) || !rateStream.eof())
+                continue;
+            _database.insert(std::make_pair(date, changedRate));
+        }
+    }
+}
+
 bool BitcoinExchange::validateDate(const std::string& date)
 {
     if(date.size() != 10 || date[4] != '-' || date[7] != '-')
@@ -64,7 +64,7 @@ bool BitcoinExchange::validateDate(const std::string& date)
     {
         if(i != 4 && i != 7)
         {
-            if(!std::isdigit(date[i]))
+            if(!std::isdigit(static_cast<unsigned char>(date[i])))
                 return false;
         }
     }
@@ -109,12 +109,12 @@ bool BitcoinExchange::validateValue(const double value)
 {
     if(value < 0)
     {
-        std::cout << "Error: not a positive number." << std::endl;
+        std::cerr << "Error: not a positive number." << std::endl;
         return false;
     }
     else if(value > 1000)
     {
-        std::cout << "Error: too large a number." << std::endl;
+        std::cerr << "Error: too large a number." << std::endl;
         return false;
     }
     return true;
@@ -136,53 +136,63 @@ void BitcoinExchange::processInputFile(const std::string& filename)
 
         if (pos == std::string::npos)
         {
-            std::cout << "Error: bad input => " << line << std::endl;
+            std::cerr << "Error: bad input => " << line << std::endl;
             continue;
         }
 
         std::string date = line.substr(0, pos);
         std::string value = line.substr(pos + 1);
 
+        // trim date
         std::string::size_type start = date.find_first_not_of(" \t\r");
         std::string::size_type end = date.find_last_not_of(" \t\r");
 
         if (start != std::string::npos)
             date = date.substr(start, end - start + 1);
 
+        // trim value
         start = value.find_first_not_of(" \t\r");
         end = value.find_last_not_of(" \t\r");
 
         if (start != std::string::npos)
             value = value.substr(start, end - start + 1);
 
+        // Using stream to convert str-double
         std::istringstream valueStream(value);
         double changedValue;
         if(!(valueStream >> changedValue) || !valueStream.eof())
         {
-            std::cout << "Error: bad input => " << line << std::endl;
+            std::cerr << "Error: bad input => " << line << std::endl;
             continue;
         }
 
         if (!validateDate(date))
         {
-            std::cout << "Error: bad input => " << line << std::endl;
+            std::cerr << "Error: bad input => " << line << std::endl;
             continue;
         }
 
         if (!validateValue(changedValue))
             continue;
 
+        if (_database.empty())
+        {
+            std::cerr << "Error: database is empty." << std::endl;
+            return;
+        }
+        // lower_bound gives the first date greater than or equal to requested date
         std::map<std::string, double>::iterator it = _database.lower_bound(date);
 
         if (it == _database.end())
         {
+            // date is not inside the database/ after last date
             --it;
         }
-        else if (it->first != date)
+        else if (it->first != date) // date doesn't exist, so use the previous/lower date
         {
             if (it == _database.begin())
             {
-                std::cout << "Error: date is before database range." << std::endl;
+                std::cerr << "Error: date is before database range." << std::endl;
                 continue;
             }
             --it;
